@@ -62,7 +62,7 @@ func main() {
 		case http.MethodGet:
 			log.Printf("GET request from %s", req.Header.Get("User-Agent"))
 			// Respond with remaining and end time for timer
-			fmt.Fprintf(res, "{seconds:%.f,end:\"%s\"}", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
+			fmt.Fprintf(res, "{\"seconds\":%.f,\"end\":\"%s\"}", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
 		case http.MethodPut:
 			log.Printf("PUT request from %s", req.Header.Get("User-Agent"))
 			// Parse form data
@@ -90,7 +90,7 @@ func main() {
 			t.Reset(time.Duration(seconds) * time.Second)
 			log.Printf("Set timer to %d seconds", seconds)
 			// Respond with remaining and end time for timer
-			fmt.Fprintf(res, "{seconds:%.f,end:\"%s\"}", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
+			fmt.Fprintf(res, "{\"seconds\":%.f,\"end\":\"%s\"}", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
 		default:
 			http.Error(res, "Not supported", 400)
 		}
