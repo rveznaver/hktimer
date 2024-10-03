@@ -15,35 +15,6 @@ import (
 	"time"
 )
 
-// implement a timer keeping track of end time
-// to calculate TimeRemaining
-type SecondsTimer struct {
-	timer *time.Timer
-	end   time.Time
-}
-
-func NewSecondsTimer(t time.Duration) *SecondsTimer {
-	return &SecondsTimer{time.NewTimer(t), time.Now().Add(t)}
-}
-
-func (s *SecondsTimer) Reset(t time.Duration) {
-	s.timer.Reset(t)
-	s.end = time.Now().Add(t)
-}
-
-func (s *SecondsTimer) Stop() {
-	s.timer.Stop()
-}
-
-func (s *SecondsTimer) TimeRemaining() time.Duration {
-	remaining := s.end.Sub(time.Now())
-	if remaining > 0 {
-		return remaining
-	} else {
-		return time.Duration(0)
-	}
-}
-
 func main() {
 	// Create the switch accessory
 	a := accessory.NewSwitch(accessory.Info{
@@ -90,8 +61,8 @@ func main() {
 		switch req.Method {
 		case http.MethodGet:
 			log.Printf("GET request from %s", req.Header.Get("User-Agent"))
-			// Respond with remaining time for timer
-			fmt.Fprintf(res, "seconds=%.f", t.TimeRemaining().Seconds())
+			// Respond with remaining and end time for timer
+			fmt.Fprintf(res, "seconds=%.f\nend=%s", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
 		case http.MethodPut:
 			log.Printf("PUT request from %s", req.Header.Get("User-Agent"))
 			// Parse form data
@@ -114,7 +85,8 @@ func main() {
 			// Set timer
 			t.Reset(time.Duration(seconds) * time.Second)
 			log.Printf("Set timer to %d seconds", seconds)
-			fmt.Fprintf(res, "seconds=%d", seconds)
+			// Respond with remaining and end time for timer
+			fmt.Fprintf(res, "seconds=%.f\nend=%s", t.TimeRemaining().Seconds(), t.end.Format(time.RFC3339))
 		default:
 			http.Error(res, "Not supported", 400)
 		}
@@ -129,12 +101,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-c
-		// Stop delivering signals.
+		log.Println("Stopping hktimer")
+		// Stop delivering signals
 		signal.Stop(c)
-		// Cancel the context to stop the server.
+		// Cancel the context to stop the server
 		cancel()
 	}()
 
-	// Run the server.
+	// Run the server
+	log.Println("Starting hktimer")
 	s.ListenAndServe(ctx)
 }
