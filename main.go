@@ -82,6 +82,10 @@ func main() {
 				http.Error(res, "Unable to read integer", http.StatusBadRequest)
 				return
 			}
+			if seconds < 0 {
+				http.Error(res, "Time has to be in the future", http.StatusBadRequest)
+				return
+			}
 			// Set timer
 			t.Reset(time.Duration(seconds) * time.Second)
 			log.Printf("Set timer to %d seconds", seconds)
