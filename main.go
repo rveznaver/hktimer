@@ -51,7 +51,6 @@ func main() {
 			<-t.timer.C
 			log.Println("Switching on via timer")
 			a.Switch.On.SetValue(true)
-			log.Println(a.Switch.On.Value())
 		}
 	}()
 
