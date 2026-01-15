@@ -49,12 +49,19 @@ func main() {
 	t := NewSecondsTimer(time.Hour)
 	t.Stop()
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	// Use a goroutine to wait for the timer to expire
 	go func() {
 		for {
-			<-t.timer.C
-			log.Println("Switching on via timer")
-			a.Switch.On.SetValue(true)
+			select {
+			case <-t.C():
+				log.Println("Switching on via timer")
+				a.Switch.On.SetValue(true)
+			case <-ctx.Done():
+				log.Println("Timer goroutine stopped")
+				return
+			}
 		}
 	}()
 
@@ -65,7 +72,6 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-c
 		log.Println("Stopping hktimer")

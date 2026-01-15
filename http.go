@@ -65,6 +65,8 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 					// Set timer
 					t.Reset(time.Duration(jsonData.Seconds) * time.Second)
 					log.Printf("Set timer to %d seconds", jsonData.Seconds)
+					res.Header().Set("Content-Type", "application/json")
+					fmt.Fprintf(res, `{"success":true}`)
 				}
 			}
 		default:

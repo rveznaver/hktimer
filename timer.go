@@ -47,3 +47,7 @@ func (s *SecondsTimer) TimeRemaining() time.Duration {
 func (s *SecondsTimer) End() time.Time {
 	return s.end.Load().(time.Time)
 }
+
+func (s *SecondsTimer) C() <-chan time.Time {
+	return s.timer.C
+}
