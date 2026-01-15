@@ -53,7 +53,7 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 			} else {
 				res.Header().Set("Content-Type", "application/json")
 				log.Printf("GET response: %s", string(jsonData))
-				fmt.Fprintf(res, string(jsonData))
+				res.Write(jsonData)
 			}
 			
 		// PUT: Set a new timer duration
@@ -93,7 +93,7 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 			
 			// Return success response
 			res.Header().Set("Content-Type", "application/json")
-			fmt.Fprintf(res, `{"success":true}`)
+			res.Write([]byte(`{"success":true}`))
 			
 		default:
 			// Reject unsupported HTTP methods
