@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	minTimerSeconds = 0
+	maxTimerSeconds = 86400 * 30 // 30 days maximum
+)
+
 type inputTimer struct {
 	Seconds int `json:"seconds"`
 }
@@ -46,9 +51,12 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 				log.Printf("PUT request failed with: %s", err)
 				http.Error(res, err.Error(), http.StatusBadRequest)
 			} else {
-				if jsonData.Seconds < 0 {
-					log.Printf("PUT request failed with bad time")
-					http.Error(res, "Time has to be in the future", http.StatusBadRequest)
+				if jsonData.Seconds < minTimerSeconds {
+					log.Printf("PUT request failed: timer value too small (%d)", jsonData.Seconds)
+					http.Error(res, "Timer must be positive", http.StatusBadRequest)
+				} else if jsonData.Seconds > maxTimerSeconds {
+					log.Printf("PUT request failed: timer value too large (%d)", jsonData.Seconds)
+					http.Error(res, fmt.Sprintf("Timer exceeds maximum duration (%d seconds)", maxTimerSeconds), http.StatusBadRequest)
 				} else {
 					// Set timer
 					t.Reset(time.Duration(jsonData.Seconds) * time.Second)
