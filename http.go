@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	minTimerSeconds = 0
-	maxTimerSeconds = 86400 * 30 // 30 days maximum
+	minTimerSeconds     = 0
+	maxTimerSeconds     = 86400 * 30 // 30 days maximum
+	maxRequestBodyBytes = 1024        // 1KB maximum request body
 )
 
 type inputTimer struct {
@@ -36,20 +37,23 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 				log.Printf("GET request failed with: %s", err)
 				http.Error(res, "Unable to output timer", http.StatusInternalServerError)
 			} else {
+				res.Header().Set("Content-Type", "application/json")
 				log.Printf("GET response: %s", string(jsonData))
 				fmt.Fprintf(res, string(jsonData))
 			}
 		// PUT requests
 		case http.MethodPut:
 			log.Printf("PUT request from %s", req.Header.Get("User-Agent"))
+			// Limit request body size to prevent DoS
+			req.Body = http.MaxBytesReader(res, req.Body, maxRequestBodyBytes)
 			// Decode JSON data
 			var jsonData inputTimer
 			decoder := json.NewDecoder(req.Body)
 			decoder.DisallowUnknownFields()
 			err := decoder.Decode(&jsonData)
 			if err != nil {
-				log.Printf("PUT request failed with: %s", err)
-				http.Error(res, err.Error(), http.StatusBadRequest)
+				log.Printf("PUT request decode error: %s", err)
+				http.Error(res, "Invalid request format", http.StatusBadRequest)
 			} else {
 				if jsonData.Seconds < minTimerSeconds {
 					log.Printf("PUT request failed: timer value too small (%d)", jsonData.Seconds)
