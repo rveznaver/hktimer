@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -8,16 +9,18 @@ import (
 // to calculate TimeRemaining
 type SecondsTimer struct {
 	timer *time.Timer
-	end   time.Time
+	end   atomic.Value // stores time.Time
 }
 
 func NewSecondsTimer(t time.Duration) *SecondsTimer {
-	return &SecondsTimer{time.NewTimer(t), time.Now().Add(t)}
+	st := &SecondsTimer{timer: time.NewTimer(t)}
+	st.end.Store(time.Now().Add(t))
+	return st
 }
 
 func (s *SecondsTimer) Reset(t time.Duration) {
 	s.timer.Reset(t)
-	s.end = time.Now().Add(t)
+	s.end.Store(time.Now().Add(t))
 }
 
 func (s *SecondsTimer) Stop() {
@@ -25,10 +28,15 @@ func (s *SecondsTimer) Stop() {
 }
 
 func (s *SecondsTimer) TimeRemaining() time.Duration {
-	remaining := s.end.Sub(time.Now())
+	endTime := s.end.Load().(time.Time)
+	remaining := endTime.Sub(time.Now())
 	if remaining > 0 {
 		return remaining
 	} else {
 		return time.Duration(0)
 	}
+}
+
+func (s *SecondsTimer) End() time.Time {
+	return s.end.Load().(time.Time)
 }

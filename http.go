@@ -25,7 +25,7 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 		case http.MethodGet:
 			log.Printf("GET request from %s", req.Header.Get("User-Agent"))
 			// Respond with remaining seconds and end time for timer
-			output := outputTimer{Seconds: int(math.Round(t.TimeRemaining().Seconds())), End: t.end.Format(time.RFC3339)}
+			output := outputTimer{Seconds: int(math.Round(t.TimeRemaining().Seconds())), End: t.End().Format(time.RFC3339)}
 			jsonData, err := json.Marshal(output)
 			if err != nil {
 				log.Printf("GET request failed with: %s", err)
