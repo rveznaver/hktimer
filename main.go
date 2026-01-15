@@ -20,6 +20,12 @@ var (
 
 func main() {
 	flag.Parse()
+	
+	// Validate port range
+	if *port < 1 || *port > 65535 {
+		log.Fatalf("Port must be between 1 and 65535, got: %d", *port)
+	}
+	
 	// Create the switch accessory
 	a := accessory.NewSwitch(accessory.Info{
 		Name: "timer",
@@ -59,6 +65,7 @@ func main() {
 				log.Println("Switching on via timer")
 				a.Switch.On.SetValue(true)
 			case <-ctx.Done():
+				t.Stop()
 				log.Println("Timer goroutine stopped")
 				return
 			}
@@ -69,8 +76,7 @@ func main() {
 
 	// Setup a listener for interrupts and SIGTERM signals to stop the server.
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-c
