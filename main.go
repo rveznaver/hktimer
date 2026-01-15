@@ -5,6 +5,8 @@ import (
 	"github.com/brutella/hap/accessory"
 
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,7 +14,12 @@ import (
 	"time"
 )
 
+var (
+	port = flag.Int("port", 30001, "HTTP server port")
+)
+
 func main() {
+	flag.Parse()
 	// Create the switch accessory
 	a := accessory.NewSwitch(accessory.Info{
 		Name: "timer",
@@ -20,7 +27,7 @@ func main() {
 
 	// Log control through HomeKit
 	a.Switch.On.OnValueRemoteUpdate(func(on bool) {
-		if on == true {
+		if on {
 			log.Println("Switching on remotely")
 		} else {
 			log.Println("Switching off remotely")
@@ -33,12 +40,10 @@ func main() {
 	// Create the hap server.
 	s, err := hap.NewServer(fs, a.A)
 	if err != nil {
-		// stop if an error happens
-		log.Panic(err)
+		log.Fatal("Failed to create HAP server: ", err)
 	}
 
-	// TODO: Make variable from cmdline
-	s.Addr = ":30001"
+	s.Addr = fmt.Sprintf(":%d", *port)
 
 	// Create a stopped timer for future use
 	t := NewSecondsTimer(time.Hour)
@@ -56,7 +61,7 @@ func main() {
 	s.ServeMux().HandleFunc("/timer", timerHandler(t))
 
 	// Setup a listener for interrupts and SIGTERM signals to stop the server.
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
 
