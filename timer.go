@@ -19,6 +19,13 @@ func NewSecondsTimer(t time.Duration) *SecondsTimer {
 }
 
 func (s *SecondsTimer) Reset(t time.Duration) {
+	// Safely drain the channel if timer already fired
+	if !s.timer.Stop() {
+		select {
+		case <-s.timer.C:
+		default:
+		}
+	}
 	s.timer.Reset(t)
 	s.end.Store(time.Now().Add(t))
 }

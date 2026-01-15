@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -39,11 +40,9 @@ func main() {
 	// TODO: Make variable from cmdline
 	s.Addr = ":30001"
 
-	// Create a timer for future use
-	t := NewSecondsTimer(0)
-	if !t.timer.Stop() {
-		<-t.timer.C
-	}
+	// Create a stopped timer for future use
+	t := NewSecondsTimer(time.Hour)
+	t.Stop()
 
 	// Use a goroutine to wait for the timer to expire
 	go func() {
