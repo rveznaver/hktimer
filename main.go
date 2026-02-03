@@ -25,7 +25,8 @@ import (
 
 // Command-line flags
 var (
-	port = flag.Int("port", 30001, "HTTP server port (1-65535)")
+	port     = flag.Int("port", 30001, "HTTP server port (1-65535)")
+	useNvram = flag.Bool("nvram", false, "Use NVRAM storage instead of filesystem (for FreshTomato routers)")
 )
 
 func main() {
@@ -50,11 +51,18 @@ func main() {
 		}
 	})
 
-	// Store HomeKit pairing data in "./db" directory (temporary, recreated on restart)
-	fs := hap.NewFsStore("./db")
+	// Select storage backend based on command-line flag
+	var store hap.Store
+	if *useNvram {
+		log.Println("Using NVRAM storage")
+		store = NewNvramStore()
+	} else {
+		log.Println("Using filesystem storage (./db)")
+		store = hap.NewFsStore("./db")
+	}
 
 	// Create the HomeKit Accessory Protocol (HAP) server
-	s, err := hap.NewServer(fs, a.A)
+	s, err := hap.NewServer(store, a.A)
 	if err != nil {
 		log.Fatal("Failed to create HAP server: ", err)
 	}
