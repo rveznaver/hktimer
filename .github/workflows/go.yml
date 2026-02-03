@@ -38,31 +38,11 @@ jobs:
       with:
         go-version: '1.25.x'
 
-    - name: Install UPX
-      run: sudo apt-get update && sudo apt-get install -y upx
-
     - name: Build for Linux ARM v5
-      run: |
-        CGO_ENABLED=0 \
-        GOOS=linux \
-        GOARCH=arm \
-        GOARM=5 \
-        go build \
-          -tags netgo \
-          -trimpath \
-          -ldflags="-s -w" \
-          -buildvcs=false \
-          -o hktimer-linux-armv5 .
+      run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -tags netgo -trimpath -ldflags="-s -w" -buildvcs=false -o hktimer-linux-armv5 .
 
     - name: Build for Linux (amd64)
-      run: |
-        CGO_ENABLED=0 \
-        GOOS=linux \
-        GOARCH=amd64 \
-        go build \
-          -trimpath \
-          -ldflags="-s -w" \
-          -o hktimer-linux-amd64 .
+      run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o hktimer-linux-amd64 .
 
     - name: Compress binaries with UPX
       run: upx --ultra-brute hktimer-linux-armv5 hktimer-linux-amd64
