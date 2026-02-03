@@ -11,21 +11,70 @@ on:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.23.x'
+        go-version: '1.25.x'
 
     - name: Install dependencies
       run: go get .
 
-    - name: Build
-      run: go build -v ./...
-
     - name: Test
       run: go test -v ./...
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.x'
+
+    - name: Install UPX
+      run: sudo apt-get update && sudo apt-get install -y upx
+
+    - name: Build for Linux ARM v5
+      run: |
+        CGO_ENABLED=0 \
+        GOOS=linux \
+        GOARCH=arm \
+        GOARM=5 \
+        go build \
+          -tags netgo \
+          -trimpath \
+          -ldflags="-s -w" \
+          -buildvcs=false \
+          -o hktimer-linux-armv5 .
+
+    - name: Build for Linux (amd64)
+      run: |
+        CGO_ENABLED=0 \
+        GOOS=linux \
+        GOARCH=amd64 \
+        go build \
+          -trimpath \
+          -ldflags="-s -w" \
+          -o hktimer-linux-amd64 .
+
+    - name: Compress binaries with UPX
+      run: upx --ultra-brute hktimer-linux-armv5 hktimer-linux-amd64
+
+    - name: Upload Linux ARM v5 binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: hktimer-linux-armv5
+        path: hktimer-linux-armv5
+
+    - name: Upload Linux amd64 binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: hktimer-linux-amd64
+        path: hktimer-linux-amd64

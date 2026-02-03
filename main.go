@@ -30,12 +30,12 @@ var (
 
 func main() {
 	flag.Parse()
-	
+
 	// Validate port range to prevent invalid configurations
 	if *port < 1 || *port > 65535 {
 		log.Fatalf("Port must be between 1 and 65535, got: %d", *port)
 	}
-	
+
 	// Create a HomeKit switch accessory that can be controlled via HomeKit apps
 	a := accessory.NewSwitch(accessory.Info{
 		Name: "timer",
@@ -100,10 +100,10 @@ func main() {
 	go func() {
 		<-c // Block until we receive a signal
 		log.Println("Stopping hktimer")
-		
+
 		// Stop receiving more signals
 		signal.Stop(c)
-		
+
 		// Cancel the context, triggering graceful shutdown of:
 		// - The HAP server
 		// - The timer goroutine

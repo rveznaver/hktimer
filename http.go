@@ -39,7 +39,7 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 		// GET: Return current timer status
 		case http.MethodGet:
 			log.Printf("GET request from %s", req.Header.Get("User-Agent"))
-			
+
 			// Build response with current timer state
 			output := outputTimer{
 				Seconds: int(math.Round(t.TimeRemaining().Seconds())),
@@ -55,14 +55,14 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 				log.Printf("GET response: %s", string(jsonData))
 				res.Write(jsonData)
 			}
-			
+
 		// PUT: Set a new timer duration
 		case http.MethodPut:
 			log.Printf("PUT request from %s", req.Header.Get("User-Agent"))
-			
+
 			// Limit request body size to prevent DoS attacks
 			req.Body = http.MaxBytesReader(res, req.Body, maxRequestBodyBytes)
-			
+
 			// Parse and validate JSON input
 			var jsonData inputTimer
 			decoder := json.NewDecoder(req.Body)
@@ -74,7 +74,7 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 				http.Error(res, "Invalid request format", http.StatusBadRequest)
 				return
 			}
-			
+
 			// Validate timer bounds
 			if jsonData.Seconds < minTimerSeconds {
 				log.Printf("PUT request failed: timer value too small (%d)", jsonData.Seconds)
@@ -86,15 +86,15 @@ func timerHandler(t *SecondsTimer) http.HandlerFunc {
 				http.Error(res, fmt.Sprintf("Timer exceeds maximum duration (%d seconds)", maxTimerSeconds), http.StatusBadRequest)
 				return
 			}
-			
+
 			// All validation passed - set the timer
 			t.Reset(time.Duration(jsonData.Seconds) * time.Second)
 			log.Printf("Set timer to %d seconds", jsonData.Seconds)
-			
+
 			// Return success response
 			res.Header().Set("Content-Type", "application/json")
 			res.Write([]byte(`{"success":true}`))
-			
+
 		default:
 			// Reject unsupported HTTP methods
 			log.Printf("HTTP request not supported")
