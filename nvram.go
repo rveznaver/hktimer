@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 	"sync"
@@ -53,6 +54,7 @@ var (
 	}
 
 	nvramCommit = func() error {
+		log.Println("Committing NVRAM to flash")
 		return exec.Command("nvram", "commit").Run()
 	}
 
@@ -102,10 +104,9 @@ func (s *nvramStore) Set(key string, value []byte) error {
 	}
 
 	// Only commit to flash when pairing data changes to reduce flash writes
-	// TODO: Uncomment when ready to persist to flash
-	// if strings.HasSuffix(key, ".pairing") {
-	// 	return nvramCommit()
-	// }
+	if strings.HasSuffix(key, ".pairing") {
+		return nvramCommit()
+	}
 	return nil
 }
 
@@ -144,10 +145,9 @@ func (s *nvramStore) Delete(key string) error {
 	}
 
 	// Commit to flash when pairing data is deleted
-	// TODO: Uncomment when ready to persist to flash
-	// if strings.HasSuffix(key, ".pairing") {
-	// 	return nvramCommit()
-	// }
+	if strings.HasSuffix(key, ".pairing") {
+		return nvramCommit()
+	}
 	return nil
 }
 

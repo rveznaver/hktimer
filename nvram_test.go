@@ -76,15 +76,13 @@ func TestNvramStore_CommitOnPairing(t *testing.T) {
 		t.Errorf("Should not commit for non-pairing keys, got %d commits", mock.commitCount)
 	}
 
-	// Set a pairing key
-	// NOTE: Commits are currently disabled for testing, so commit count stays 0
+	// Set a pairing key - should commit
 	pairingKey := "33313046433135382d423239452d344635322d423542322d413734324344464345383141.pairing"
 	store.Set(pairingKey, []byte(`{"Name":"310FC158-B29E-4F52-B5B2-A742CDFCE81A"}`))
 
-	// TODO: Uncomment when commits are re-enabled
-	// if mock.commitCount != 1 {
-	// 	t.Errorf("Expected 1 commit after pairing, got %d", mock.commitCount)
-	// }
+	if mock.commitCount != 1 {
+		t.Errorf("Expected 1 commit after pairing, got %d", mock.commitCount)
+	}
 }
 
 func TestNvramStore_Delete(t *testing.T) {
@@ -116,15 +114,12 @@ func TestNvramStore_DeletePairingCommits(t *testing.T) {
 	pairingKey := "33313046433135382d423239452d344635322d423542322d413734324344464345383141.pairing"
 	store.Set(pairingKey, []byte(`{"Name":"310FC158-B29E-4F52-B5B2-A742CDFCE81A"}`))
 
-	// NOTE: Commits are currently disabled for testing
-	_ = mock.commitCount
+	commitsBefore := mock.commitCount
 	store.Delete(pairingKey)
 
-	// TODO: Uncomment when commits are re-enabled
-	// commitsBefore := mock.commitCount - 1 // -1 because Set also commits
-	// if mock.commitCount != commitsBefore+1 {
-	// 	t.Errorf("Expected commit after deleting pairing, got %d commits", mock.commitCount-commitsBefore)
-	// }
+	if mock.commitCount != commitsBefore+1 {
+		t.Errorf("Expected commit after deleting pairing, got %d commits", mock.commitCount-commitsBefore)
+	}
 }
 
 func TestNvramStore_KeysWithSuffix(t *testing.T) {
